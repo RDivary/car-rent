@@ -50,9 +50,4 @@ public class CarController extends BaseController {
     public ResponseEntity<BaseResponse<Object>> findById(@PathVariable String id){
         return getResponseOk(carService.findById(id), "Car Found");
     }
-
-    @GetMapping("/validate-token")
-    public ResponseEntity<BaseResponse<Boolean>> validateToken(){
-        return getResponseOk(true, "");
-    }
 }
