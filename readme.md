@@ -1,4 +1,4 @@
-# Car Rest
+# Car Rent
 THis is application for rent a car
 
 ## Prerequisites
