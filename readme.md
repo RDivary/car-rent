@@ -14,4 +14,4 @@ Create and start Container with docker compose
 - open terminal
 - docker-compose up
 ```
-and you can run another service one by one
+Before you run another service, you must build [common service](https://github.com/RDivary/car-rent/tree/master/common-service). after this you can run another service one by one
