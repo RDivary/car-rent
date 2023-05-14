@@ -2,6 +2,7 @@ package com.divary.carservice.service;
 
 import com.divary.carservice.dto.CarDto;
 import com.divary.carservice.dto.request.car.CreateOrUpdateCarRequest;
+import com.divary.carservice.model.Brand;
 import com.divary.carservice.model.Car;
 import com.divary.carservice.preference.RabbitMQCarPreference;
 import com.divary.carservice.repository.CarRepository;
@@ -15,19 +16,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class CarServiceImpl implements CarService{
     private final CarRepository carRepository;
+    private final BrandService brandService;
     private final RabbitTemplate rabbitTemplate;
     private final RabbitMQCarPreference rabbitMQCarPreference;
 
-    public CarServiceImpl(CarRepository carRepository, RabbitTemplate rabbitTemplate, RabbitMQCarPreference rabbitMQCarPreference) {
+    public CarServiceImpl(CarRepository carRepository, BrandService brandService, RabbitTemplate rabbitTemplate, RabbitMQCarPreference rabbitMQCarPreference) {
         this.carRepository = carRepository;
+        this.brandService = brandService;
         this.rabbitTemplate = rabbitTemplate;
         this.rabbitMQCarPreference = rabbitMQCarPreference;
     }
 
     @Override
     public void create(CreateOrUpdateCarRequest form) {
+        Brand brand = brandService.findById(form.getBrand());
         Car car = Car.builder()
-                .brand(form.getBrand())
+                .brand(brand)
                 .model(form.getModel())
                 .engine(form.getEngine())
                 .passenger(form.getPassenger())
@@ -47,7 +51,9 @@ public class CarServiceImpl implements CarService{
     @Override
     public void update(String id, CreateOrUpdateCarRequest form) {
         Car car = findById(id, "");
-        car.setBrand(form.getBrand());
+        Brand brand = brandService.findById(form.getBrand());
+
+        car.setBrand(brand);
         car.setModel(form.getModel());
         car.setPassenger(form.getPassenger());
         car.setEngine(form.getEngine());
@@ -75,10 +81,23 @@ public class CarServiceImpl implements CarService{
         return carRepository.findById(id).orElseThrow(() -> new NotFoundException("Car Not Found"));
     }
 
+    @Override
+    //TODO change to async
+    public void renameBrand(String idBrand, String newNameBrand) {
+        carRepository.findByBrandId(idBrand)
+                .stream().parallel()
+                .forEach(car -> {
+                    CarDto carDto = carToCarDto(car);
+                    carDto.setBrand(newNameBrand);
+
+                    rabbitTemplate.convertAndSend(rabbitMQCarPreference.updateCarExchange, "", carDto);
+                });
+    }
+
     private CarDto carToCarDto(Car car){
         return CarDto.builder()
                 .id(car.getId())
-                .brand(car.getBrand())
+                .brand(car.getBrand().getName())
                 .model(car.getModel())
                 .passenger(car.getPassenger())
                 .engine(car.getEngine())

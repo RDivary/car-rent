@@ -8,4 +8,5 @@ public interface CarService {
     CarDto findById(String id);
     void update(String id, CreateOrUpdateCarRequest form);
     void delete(String id);
+    void renameBrand(String idBrand, String newNameBrand);
 }

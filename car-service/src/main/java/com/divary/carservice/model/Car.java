@@ -24,8 +24,9 @@ public class Car extends AuditEntity {
     @GenericGenerator(name = "car_uuid", strategy = "uuid")
     private String id;
 
-    @Column(nullable = false)
-    private String brand;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "brand_id", nullable = false, referencedColumnName = "id")
+    private Brand brand;
 
     @Column(nullable = false, unique = true)
     private String model;
